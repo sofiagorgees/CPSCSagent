@@ -1,0 +1,263 @@
+kind: AdaptiveDialog
+modelDescription: find email and ask the user if they would like to reply
+beginDialog:
+  kind: OnRecognizedIntent
+  id: main
+  intent: {}
+  actions:
+    - kind: AdaptiveCardPrompt
+      id: PFkOzY
+      displayName: Adaptive Card - get emails
+      card: |-
+        {
+          "type": "AdaptiveCard",
+          "$schema": "https://adaptivecards.io/schemas/adaptive-card.json",
+          "version": "1.5",
+          "actions": [
+            {
+              "type": "Action.Submit",
+              "title": "Find",
+              "id": "submitBtn"
+            }
+          ],
+          "body": [
+            {
+              "type": "TextBlock",
+              "text": "Please fill in the criteria you would like to search for:",
+              "wrap": true,
+              "id": "textBlock"
+            },
+            {
+              "type": "Input.Text",
+              "label": "From",
+              "placeholder": "person@owi.com",
+              "id": "fromInput"
+            },
+            {
+              "type": "Input.Text",
+              "label": "To",
+              "placeholder": "me, person@owi.com",
+              "id": "toInput"
+            },
+            {
+              "type": "Input.Text",
+              "label": "Subject",
+              "placeholder": "ex. Order ###",
+              "id": "subjectInput"
+            },
+            {
+              "type": "Input.Text",
+              "label": "Folder",
+              "placeholder": "ex. Inbox, Archive, Drafts",
+              "id": "folderInput"
+            }
+          ]
+        }
+      output:
+        binding:
+          actionSubmitId: Topic.actionSubmitId
+          folderInput: Topic.folderInput
+          fromInput: Topic.fromInput
+          subjectInput: Topic.subjectInput
+          toInput: Topic.toInput
+
+      outputType:
+        properties:
+          actionSubmitId: String
+          folderInput: String
+          fromInput: String
+          subjectInput: String
+          toInput: String
+
+    - kind: SetVariable
+      id: setVariable_A4emmr
+      variable: Topic.flderSearch
+      value: Inbox
+
+    - kind: ConditionGroup
+      id: conditionGroup_mOxkzD
+      conditions:
+        - id: conditionItem_4LChXV
+          condition: =!IsBlank(Topic.folderInput)
+          actions:
+            - kind: SetVariable
+              id: setVariable_LxuIuS
+              variable: Topic.flderSearch
+              value: =Topic.folderInput
+
+    - kind: SendActivity
+      id: SendActivity_oSJ46n
+      activity: "Searching for emails that match the criteria: "
+
+    - kind: BeginDialog
+      id: aLuazA
+      input:
+        binding:
+          folderPath: =Topic.flderSearch
+          from: =Topic.fromInput
+          subjectFilter: =Topic.subjectInput
+          toOrCc: =Topic.toInput
+
+      dialog: cr689_customerCareAssistant.action.Office365Outlook-GetemailsV3
+      output:
+        binding:
+          value: Topic.value
+
+    - kind: SetVariable
+      id: setVariable_tBZMpP
+      variable: Topic.numEmails
+      value: =CountRows(Topic.value)
+
+    - kind: SendActivity
+      id: sendActivity_kTATLL
+      activity: "{Topic.numEmails}"
+
+    - kind: ConditionGroup
+      id: conditionGroup_DN4rmF
+      conditions:
+        - id: conditionItem_1Kb5ZY
+          condition: =Topic.numEmails = 1
+          actions:
+            - kind: Question
+              id: question_Gw4i3M
+              interruptionPolicy:
+                allowInterruption: true
+
+              variable: Topic.emailReplyChoice
+              prompt: Would you like to reply to this email?
+              entity:
+                kind: EmbeddedEntity
+                sensitivityLevel: None
+                definition:
+                  kind: ClosedListEntity
+                  items:
+                    - id: yes
+                      displayName: yes
+
+                    - id: no
+                      displayName: no
+
+            - kind: ConditionGroup
+              id: conditionGroup_JIe85L
+              conditions:
+                - id: conditionItem_HLEmoK
+                  condition: =Topic.emailReplyChoice = 'cr689_customerCareAssistant.topic.findemailasktoreply.main.question_Gw4i3M'.yes
+                  actions:
+                    - kind: SendActivity
+                      id: sendActivity_1BWgpl
+                      activity: "{First(Topic.value).body}"
+
+              elseActions:
+                - kind: EndDialog
+                  id: aCyRam
+
+            - kind: InvokeAIBuilderModelAction
+              id: invokeAIBuilderModelAction_4KKsVD
+              input:
+                binding:
+                  email_20input: =First(Topic.value).body
+
+              output:
+                binding:
+                  predictionOutput: Topic.outputmessage
+
+              aIModelId: 0a6eda31-26bf-421a-944c-115699e7f39b
+
+            - kind: SetVariable
+              id: setVariable_XZpXob
+              variable: Topic.outputMessageText
+              value: =Topic.outputmessage.text
+
+            - kind: SendActivity
+              id: sendActivity_iMKwHj
+              activity: "{Topic.outputmessage.text}"
+
+            - kind: ParseValue
+              id: P0DQp8
+              displayName: setJSON
+              variable: Topic.adaptiveCardJson
+              valueType: String
+              value: "{       \"type\": \"AdaptiveCard\",       \"$schema\": \"https://adaptivecards.io/schemas/adaptive-card.json\",       \"version\": \"1.5\",       \"body\": [         {           \"type\": \"TextBlock\",           \"wrap\": true,           \"text\": \"Reply Email\",           \"size\": \"Large\"         },         {           \"type\": \"Input.Text\",           \"label\": \"New \",           \"id\": \"subjectInput\",           \"placeholder\": \"Subject\"         },         {           \"type\": \"Input.Text\",           \"label\": \"Body \",           \"id\": \"bodyText\",           \"value\": \"@{Topic.outputMessageText}\"         }       ],       \"actions\": [         {           \"type\": \"Action.Submit\",           \"title\": \"Send\",           \"id\": \"submitButton\"         }       ]     }"
+              errorPolicy: DefaultBlank
+
+            - kind: AdaptiveCardPrompt
+              id: bc0U6l
+              card: |-
+                {
+                  "type": "AdaptiveCard",
+                  "$schema": "https://adaptivecards.io/schemas/adaptive-card.json",
+                  "version": "1.5",
+                  "body": [
+                    {
+                      "type": "TextBlock",
+                      "wrap": true,
+                      "text": "Reply Email",
+                      "size": "Large"
+                    },
+                    {
+                      "type": "Input.Text",
+                      "label": "New ",
+                      "id": "subjectInput",
+                      "placeholder": "Subject"
+                    },
+                    {
+                      "type": "Input.Text",
+                      "label": "Body ",
+                      "id": "bodyText",
+                      "value": "{Topic.outputMessageText}"
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": "Action.Submit",
+                      "title": "Send",
+                      "id": "submitButton"
+                    }
+                  ]
+                }
+              output:
+                binding:
+                  actionSubmitId: Topic.actionSubmitId
+                  bodyText: Topic.bodyText
+                  subjectInput: Topic.subjectInput
+
+              outputType:
+                properties:
+                  actionSubmitId: String
+                  bodyText: String
+                  subjectInput: String
+
+        - id: conditionItem_M2hZsm
+          condition: =Topic.numEmails > 1
+          actions:
+            - kind: Question
+              id: question_UVmwwj
+              interruptionPolicy:
+                allowInterruption: true
+
+              variable: Topic.emailReply
+              prompt: Would you like to reply to any of these email
+              entity:
+                kind: BooleanPrebuiltEntity
+                sensitivityLevel: None
+
+            - kind: ConditionGroup
+              id: conditionGroup_YBzgZ2
+              conditions:
+                - id: conditionItem_Mkc424
+                  condition: =Topic.emailReply = true
+
+              elseActions:
+                - kind: EndDialog
+                  id: HUPl8B
+
+      elseActions:
+        - kind: SendActivity
+          id: sendActivity_bZFcp8
+          activity: No emails found
+
+        - kind: EndDialog
+          id: C8eiud
+
+inputType: {}
+outputType: {}
