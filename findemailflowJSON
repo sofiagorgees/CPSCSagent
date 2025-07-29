@@ -172,14 +172,6 @@ beginDialog:
               id: sendActivity_iMKwHj
               activity: "{Topic.outputmessage.text}"
 
-            - kind: ParseValue
-              id: P0DQp8
-              displayName: setJSON
-              variable: Topic.adaptiveCardJson
-              valueType: String
-              value: "{       \"type\": \"AdaptiveCard\",       \"$schema\": \"https://adaptivecards.io/schemas/adaptive-card.json\",       \"version\": \"1.5\",       \"body\": [         {           \"type\": \"TextBlock\",           \"wrap\": true,           \"text\": \"Reply Email\",           \"size\": \"Large\"         },         {           \"type\": \"Input.Text\",           \"label\": \"New \",           \"id\": \"subjectInput\",           \"placeholder\": \"Subject\"         },         {           \"type\": \"Input.Text\",           \"label\": \"Body \",           \"id\": \"bodyText\",           \"value\": \"@{Topic.outputMessageText}\"         }       ],       \"actions\": [         {           \"type\": \"Action.Submit\",           \"title\": \"Send\",           \"id\": \"submitButton\"         }       ]     }"
-              errorPolicy: DefaultBlank
-
             - kind: AdaptiveCardPrompt
               id: bc0U6l
               card: |-
@@ -190,27 +182,29 @@ beginDialog:
                   "body": [
                     {
                       "type": "TextBlock",
-                      "wrap": true,
                       "text": "Reply Email",
-                      "size": "Large"
+                      "wrap": true,
+                      "spacing": "None",
+                      "size": "Medium"
                     },
                     {
                       "type": "Input.Text",
-                      "label": "New ",
-                      "id": "subjectInput",
-                      "placeholder": "Subject"
+                      "label": "Subject",
+                      "placeholder": "enter a subject",
+                      "id": "subjectText"
                     },
                     {
                       "type": "Input.Text",
-                      "label": "Body ",
-                      "id": "bodyText",
-                      "value": "{Topic.outputMessageText}"
+                      "label": "Body:",
+                      "value": "Dear Person, blah blah blah. Thanks",
+                      "isMultiline": true,
+                      "id": "bodyText"
                     }
                   ],
                   "actions": [
                     {
                       "type": "Action.Submit",
-                      "title": "Send",
+                      "title": "Send Email",
                       "id": "submitButton"
                     }
                   ]
@@ -219,13 +213,13 @@ beginDialog:
                 binding:
                   actionSubmitId: Topic.actionSubmitId
                   bodyText: Topic.bodyText
-                  subjectInput: Topic.subjectInput
+                  subjectText: Topic.subjectText
 
               outputType:
                 properties:
                   actionSubmitId: String
                   bodyText: String
-                  subjectInput: String
+                  subjectText: String
 
         - id: conditionItem_M2hZsm
           condition: =Topic.numEmails > 1
@@ -259,5 +253,7 @@ beginDialog:
         - kind: EndDialog
           id: C8eiud
 
+inputType: {}
+outputType: {}
 inputType: {}
 outputType: {}
