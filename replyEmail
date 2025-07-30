@@ -2,7 +2,15 @@ kind: AdaptiveDialog
 inputs:
   - kind: ManualTaskInput
     propertyName: messageID
-    value: wait
+    value: id of message
+
+  - kind: ManualTaskInput
+    propertyName: emailFound
+    value: email found from topic
+
+  - kind: ManualTaskInput
+    propertyName: toEmails
+    value: emails to respond to
 
 modelDescription: find email and ask the user if they would like to reply
 beginDialog:
@@ -14,7 +22,7 @@ beginDialog:
       id: iIkisT
       input:
         binding:
-          inputEmail: =Global.emailFound
+          inputEmail: =Topic.emailFound
 
       output:
         binding:
@@ -48,7 +56,7 @@ beginDialog:
             },
             {
               "type": "Input.Text",
-              "label": "Subject",
+              "label": "To Recipients:",
               "placeholder": "enter a subject",
               "id": "subjectText"
             },
@@ -80,6 +88,10 @@ beginDialog:
           bodyText: String
           subjectText: String
 
+    - kind: SendActivity
+      id: sendActivity_Vm3CbO
+      activity: "{Topic.bodyText}"
+
     - kind: InvokeAIBuilderModelAction
       id: 9xIFFO
       input:
@@ -93,21 +105,35 @@ beginDialog:
       aIModelId: e35b32a0-9364-45bc-bbd1-411b153a90f8
 
     - kind: SendActivity
-      id: Dsi4uD
-      activity: "{Topic.finalHtmlEmail.text}"
+      id: sendActivity_mbH34L
+      activity: |-
+        to: {Topic.toEmails}
+
+        body: 
+        {Topic.finalHtmlEmail.text}
 
     - kind: BeginDialog
       id: FpFoU4
       input:
         binding:
           Body: =Topic.finalHtmlEmail.text
+          messageId: =Topic.messageID
+          To: =Topic.toEmails
 
       dialog: cr689_customerCareAssistant.action.Office365Outlook-ReplytoemailV3
 
 inputType:
   properties:
+    emailFound:
+      displayName: emailFound
+      type: String
+
     messageID:
       displayName: messageID
+      type: String
+
+    toEmails:
+      displayName: toEmails
       type: String
 
 outputType: {}
