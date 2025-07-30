@@ -1,0 +1,113 @@
+kind: AdaptiveDialog
+inputs:
+  - kind: ManualTaskInput
+    propertyName: messageID
+    value: wait
+
+modelDescription: find email and ask the user if they would like to reply
+beginDialog:
+  kind: OnRecognizedIntent
+  id: main
+  intent: {}
+  actions:
+    - kind: InvokeAIBuilderModelAction
+      id: iIkisT
+      input:
+        binding:
+          inputEmail: =Global.emailFound
+
+      output:
+        binding:
+          predictionOutput: Topic.outputRecord
+
+      aIModelId: 3f453886-7077-4bd3-8dc7-ca002a9a965a
+
+    - kind: SetVariable
+      id: qMJdEa
+      variable: Topic.outputMessageText
+      value: =Topic.outputRecord.text
+
+    - kind: SendActivity
+      id: RWyQXg
+      activity: "{Topic.outputMessageText}"
+
+    - kind: AdaptiveCardPrompt
+      id: kQDZKW
+      card: |-
+        {
+          "type": "AdaptiveCard",
+          "$schema": "https://adaptivecards.io/schemas/adaptive-card.json",
+          "version": "1.5",
+          "body": [
+            {
+              "type": "TextBlock",
+              "text": "Reply Email",
+              "wrap": true,
+              "spacing": "None",
+              "size": "Medium"
+            },
+            {
+              "type": "Input.Text",
+              "label": "Subject",
+              "placeholder": "enter a subject",
+              "id": "subjectText"
+            },
+            {
+              "type": "Input.Text",
+              "label": "Body:",
+              "value": "Dear Person,\nblah blah blah.\nThanks",
+              "isMultiline": true,
+              "id": "bodyText"
+            }
+          ],
+          "actions": [
+            {
+              "type": "Action.Submit",
+              "title": "Send Email",
+              "id": "submitButton"
+            }
+          ]
+        }
+      output:
+        binding:
+          actionSubmitId: Topic.actionSubmitId
+          bodyText: Topic.bodyText
+          subjectText: Topic.subjectText
+
+      outputType:
+        properties:
+          actionSubmitId: String
+          bodyText: String
+          subjectText: String
+
+    - kind: InvokeAIBuilderModelAction
+      id: 9xIFFO
+      input:
+        binding:
+          Markdown_20Text: =Topic.bodyText
+
+      output:
+        binding:
+          predictionOutput: Topic.finalHtmlEmail
+
+      aIModelId: e35b32a0-9364-45bc-bbd1-411b153a90f8
+
+    - kind: SendActivity
+      id: Dsi4uD
+      activity: "{Topic.finalHtmlEmail.text}"
+
+    - kind: BeginDialog
+      id: FpFoU4
+      input:
+        binding:
+          Body: =Topic.finalHtmlEmail.text
+
+      dialog: cr689_customerCareAssistant.action.Office365Outlook-ReplytoemailV3
+
+inputType:
+  properties:
+    messageID:
+      displayName: messageID
+      type: String
+
+outputType: {}
