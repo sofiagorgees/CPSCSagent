@@ -115,17 +115,34 @@ beginDialog:
 
       aIModelId: a49adc21-1a43-4810-8c32-82c4b262ff24
 
-    - kind: SendActivity
-      id: sendActivity_JyooY1
-      activity: |-
-        Emails Found:
-
-        {Topic.foundEmailSummary.text}
-
     - kind: SetVariable
       id: setVariable_tBZMpP
       variable: Topic.numEmails
       value: =CountRows(Topic.value)
+
+    - kind: ConditionGroup
+      id: conditionGroup_Jss2a9
+      conditions:
+        - id: conditionItem_Evop4q
+          condition: =Topic.numEmails = 10
+          actions:
+            - kind: SendActivity
+              id: sendActivity_75hHsk
+              activity: Displaying top 10 most relevant
+
+        - id: conditionItem_eGr26m
+          condition: =Topic.numEmails = 0
+          actions:
+            - kind: GotoAction
+              id: AYlVRZ
+              actionId: sendActivity_bZFcp8
+
+    - kind: SendActivity
+      id: 6TQYau
+      activity: |-
+        Emails Found:
+
+        {Topic.foundEmailSummary.text}
 
     - kind: SendActivity
       id: sendActivity_kTATLL
