@@ -36,7 +36,9 @@ beginDialog:
 
     - kind: SendActivity
       id: RWyQXg
-      activity: "{Topic.outputMessageText}"
+      activity: |-
+        Feel free to copy and paste this sample reply generated for you! Make sure to review and edit where needed.
+        {Topic.outputMessageText}
 
     - kind: AdaptiveCardPrompt
       id: kQDZKW
@@ -54,42 +56,39 @@ beginDialog:
               "size": "Medium"
             },
             {
-              "type": "Input.Text",
-              "label": "To Recipients:",
-              "placeholder": "enter a subject",
-              "id": "subjectText"
+              "type": "TextBlock",
+              "wrap": true,
+              "text": "Please review all information carefully before sending",
+              "id": "infoText"
             },
             {
               "type": "Input.Text",
               "label": "Body:",
-              "value": "Dear Person,\nblah blah blah.\nThanks",
               "isMultiline": true,
-              "id": "bodyText"
+              "id": "bodyText",
+              "height": "stretch",
+              "placeholder": "Hi,\n\nPlease enter your email here.\n\nThanks!"
             }
           ],
           "actions": [
             {
               "type": "Action.Submit",
-              "title": "Send Email",
-              "id": "submitButton"
+              "title": "Submit",
+              "id": "submitButton",
+              "iconUrl": "icon:Send"
             }
-          ]
+          ],
+          "minHeight": "450px"
         }
       output:
         binding:
           actionSubmitId: Topic.actionSubmitId
           bodyText: Topic.bodyText
-          subjectText: Topic.subjectText
 
       outputType:
         properties:
           actionSubmitId: String
           bodyText: String
-          subjectText: String
-
-    - kind: SendActivity
-      id: sendActivity_Vm3CbO
-      activity: "{Topic.bodyText}"
 
     - kind: InvokeAIBuilderModelAction
       id: 9xIFFO
@@ -103,13 +102,51 @@ beginDialog:
 
       aIModelId: e35b32a0-9364-45bc-bbd1-411b153a90f8
 
-    - kind: SendActivity
-      id: sendActivity_mbH34L
-      activity: |-
-        to: {Topic.toEmails}
+    - kind: Question
+      id: question_KXFnN8
+      interruptionPolicy:
+        allowInterruption: true
 
-        body: 
+      variable: init:Topic.sendEmailChoice
+      prompt: |-
+        **Your email:**
+
+        **To:** {Topic.toEmails}
+
+        **Body:**
         {Topic.finalHtmlEmail.text}
+      entity:
+        kind: EmbeddedEntity
+        definition:
+          kind: ClosedListEntity
+          items:
+            - id: Send
+              displayName: Send
+
+            - id: Cancel
+              displayName: Cancel
+
+    - kind: ConditionGroup
+      id: conditionGroup_l1lh2Z
+      conditions:
+        - id: conditionItem_35NDSz
+          condition: =Topic.sendEmailChoice = 'cr689_customerCareAssistant.topic.replyemail.main.question_KXFnN8'.Send
+
+        - id: conditionItem_X66qz4
+          condition: =Topic.sendEmailChoice = 'cr689_customerCareAssistant.topic.replyemail.main.question_KXFnN8'.Cancel
+          actions:
+            - kind: SendActivity
+              id: sendActivity_j96m57
+              activity: |-
+                Cancelling reply email.
+                Nothing will be sent.
+
+            - kind: EndDialog
+              id: IB5Ds7
+
+      elseActions:
+        - kind: EndDialog
+          id: 4X1dfa
 
     - kind: BeginDialog
       id: FpFoU4
