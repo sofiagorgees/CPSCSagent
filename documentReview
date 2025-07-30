@@ -1,0 +1,207 @@
+kind: AdaptiveDialog
+modelDisplayName: Document File Review
+modelDescription: |-
+  Trigger this topic if the user prompts to: review a file, summarize a file, look over file, review document, summarize document, look over a document, or similar phrases. 
+  Inside the topic it will prompt for attaching a file.
+beginDialog:
+  kind: OnRecognizedIntent
+  id: main
+  priority: 1
+  intent: {}
+  actions:
+    - kind: Question
+      id: question_Ck5EnZ
+      interruptionPolicy:
+        allowInterruption: true
+
+      variable: init:Topic.fileUpload
+      prompt: |-
+        Please upload a file to review. 
+        PDF type only.
+         Must be less than 50 pages.
+      entity: FilePrebuiltEntity
+
+    - kind: SetVariable
+      id: setVariable_q3ozCj
+      variable: Topic.pdfCheck
+      value: |-
+        =EndsWith(
+            Lower(First(System.Activity.Attachments).Name), 
+            ".pdf"
+        )
+
+    - kind: SetVariable
+      id: setVariable_XpDspK
+      variable: Topic.qtyCheck
+      value: =CountRows(System.Activity.Attachments)=1
+
+    - kind: ConditionGroup
+      id: conditionGroup_5KWr0a
+      conditions:
+        - id: conditionItem_ctdzf5
+          condition: =Topic.pdfCheck = false
+          actions:
+            - kind: SendActivity
+              id: sendActivity_nWvgH9
+              activity: not a PDF
+
+        - id: conditionItem_GZOshH
+          condition: =Topic.qtyCheck = false
+          actions:
+            - kind: SendActivity
+              id: sendActivity_dMj4qX
+              activity: only upload a single PDF
+
+      elseActions:
+        - kind: SetVariable
+          id: bGKAnR
+          variable: Topic.searchPhrase
+          value: "Search for:"
+
+        - kind: Question
+          id: question_WI40VX
+          interruptionPolicy:
+            allowInterruption: true
+
+          variable: init:Topic.searchChoice
+          prompt: What would you like to search for from the file
+          entity:
+            kind: EmbeddedEntity
+            definition:
+              kind: ClosedListEntity
+              items:
+                - id: Compliance Details
+                  displayName: Compliance Details
+
+                - id: Fine codes
+                  displayName: Fine codes
+
+                - id: General Summary
+                  displayName: General Summary
+
+                - id: Other
+                  displayName: Other
+
+            displayName: EmbeddedEntity-i40emb
+
+        - kind: ConditionGroup
+          id: conditionGroup_A49mkX
+          conditions:
+            - id: conditionItem_2TTtpz
+              condition: =Topic.searchChoice = 'cr689_customerCareAssistant.topic.filereview2.0.main.question_WI40VX'.'Fine codes'
+              actions:
+                - kind: SetVariable
+                  id: setVariable_tq8vdE
+                  variable: Topic.searchPhrase
+                  value: fine codes
+
+            - id: conditionItem_PkCO6v
+              condition: =Topic.searchChoice = 'cr689_customerCareAssistant.topic.filereview2.0.main.question_WI40VX'.'General Summary'
+              actions:
+                - kind: SetVariable
+                  id: setVariable_P3L7it
+                  variable: Topic.searchPhrase
+                  value: general summary
+
+            - id: conditionItem_UcUFEX
+              condition: =Topic.searchChoice = 'cr689_customerCareAssistant.topic.filereview2.0.main.question_WI40VX'.'Compliance Details'
+              actions:
+                - kind: SetVariable
+                  id: setVariable_aON1Rz
+                  variable: Topic.searchPhrase
+                  value: compliance details
+
+            - id: conditionItem_txkb8t
+              condition: =Topic.searchChoice = 'cr689_customerCareAssistant.topic.filereview2.0.main.question_WI40VX'.Other
+              actions:
+                - kind: Question
+                  id: b4BZvE
+                  interruptionPolicy:
+                    allowInterruption: true
+
+                  alwaysPrompt: true
+                  variable: Topic.searchPhrase
+                  prompt: What would you like to search the document for? (Phrases, keywords, topics, etc.)
+                  entity:
+                    kind: StringPrebuiltEntity
+                    sensitivityLevel: None
+
+          elseActions:
+            - kind: BeginDialog
+              id: Z5rdRl
+              dialog: cr689_customerCareAssistant.topic.Search
+
+        - kind: InvokeAIBuilderModelAction
+          id: invokeAIBuilderModelAction_hcPV5W
+          input:
+            binding:
+              Document_20input: =Topic.fileUpload
+              phrase_20to_20search_20for: =Topic.searchPhrase
+
+          output:
+            binding:
+              predictionOutput: Topic.promptOutput
+
+          aIModelId: fe9cb987-151c-46a6-aee0-dae3c6af3c80
+
+        - kind: SendActivity
+          id: sendActivity_sJKjtz
+          activity: "{Topic.promptOutput.text}"
+
+        - kind: Question
+          id: question_9XLvUa
+          interruptionPolicy:
+            allowInterruption: true
+
+          variable: init:Topic.afterOption
+          prompt: Would you like to search this document for anything else or upload a new file to review
+          entity:
+            kind: EmbeddedEntity
+            definition:
+              kind: ClosedListEntity
+              items:
+                - id: Search for phrase
+                  displayName: Search for phrase
+
+                - id: New file
+                  displayName: New file
+
+                - id: Other
+                  displayName: Other
+
+        - kind: ConditionGroup
+          id: conditionGroup_pRfTKb
+          conditions:
+            - id: conditionItem_MD2w3N
+              condition: =Topic.afterOption = 'cr689_customerCareAssistant.topic.filereview2.0.main.question_9XLvUa'.'Search for phrase'
+              actions:
+                - kind: GotoAction
+                  id: m20xQE
+                  actionId: question_WI40VX
+
+            - id: conditionItem_8V8V6r
+              condition: =Topic.afterOption = 'cr689_customerCareAssistant.topic.filereview2.0.main.question_9XLvUa'.'New file'
+              actions:
+                - kind: GotoAction
+                  id: gftk7L
+                  actionId: question_Ck5EnZ
+
+          elseActions:
+            - kind: Question
+              id: question_2QwREn
+              interruptionPolicy:
+                allowInterruption: true
+
+              variable: init:Topic.Var1
+              prompt: What else can I help with
+              entity: StringPrebuiltEntity
+
+            - kind: SearchAndSummarizeContent
+              id: U3S6bd
+              userInput: =Topic.Var1
+
+    - kind: EndDialog
+      id: maTeXA
+
+inputType: {}
+outputType: {}
