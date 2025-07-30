@@ -14,9 +14,8 @@ inputs:
 
 modelDescription: find email and ask the user if they would like to reply
 beginDialog:
-  kind: OnRecognizedIntent
+  kind: OnRedirect
   id: main
-  intent: {}
   actions:
     - kind: InvokeAIBuilderModelAction
       id: iIkisT
