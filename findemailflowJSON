@@ -143,34 +143,39 @@ beginDialog:
                 - id: conditionItem_HLEmoK
                   condition: =Topic.emailReplyChoice = 'cr689_customerCareAssistant.topic.findemailasktoreply.main.question_Gw4i3M'.yes
                   actions:
+                    - kind: SetVariable
+                      id: setVariable_7I2IHV
+                      variable: Topic.emailFound
+                      value: =First(Topic.value).body
+
                     - kind: SendActivity
-                      id: sendActivity_1BWgpl
-                      activity: "{First(Topic.value).body}"
+                      id: sendActivity_zvIYO3
+                      activity: "{Topic.emailFound}"
 
               elseActions:
                 - kind: EndDialog
                   id: aCyRam
 
             - kind: InvokeAIBuilderModelAction
-              id: invokeAIBuilderModelAction_4KKsVD
+              id: invokeAIBuilderModelAction_XZ31ea
               input:
                 binding:
-                  email_20input: =First(Topic.value).body
+                  inputEmail: =Topic.emailFound
 
               output:
                 binding:
-                  predictionOutput: Topic.outputmessage
+                  predictionOutput: Topic.outputRecord
 
-              aIModelId: 0a6eda31-26bf-421a-944c-115699e7f39b
+              aIModelId: 3f453886-7077-4bd3-8dc7-ca002a9a965a
 
             - kind: SetVariable
               id: setVariable_XZpXob
               variable: Topic.outputMessageText
-              value: =Topic.outputmessage.text
+              value: =Topic.outputRecord.text
 
             - kind: SendActivity
-              id: sendActivity_iMKwHj
-              activity: "{Topic.outputmessage.text}"
+              id: sendActivity_EjVolY
+              activity: "{Topic.outputMessageText}"
 
             - kind: AdaptiveCardPrompt
               id: bc0U6l
@@ -196,7 +201,7 @@ beginDialog:
                     {
                       "type": "Input.Text",
                       "label": "Body:",
-                      "value": "Dear Person, blah blah blah. Thanks",
+                      "value": "Dear Person,\nblah blah blah.\nThanks",
                       "isMultiline": true,
                       "id": "bodyText"
                     }
@@ -220,6 +225,22 @@ beginDialog:
                   actionSubmitId: String
                   bodyText: String
                   subjectText: String
+
+            - kind: InvokeAIBuilderModelAction
+              id: invokeAIBuilderModelAction_1juBiJ
+              input:
+                binding:
+                  Markdown_20Text: =Topic.bodyText
+
+              output:
+                binding:
+                  predictionOutput: Topic.finalHtmlEmail
+
+              aIModelId: e35b32a0-9364-45bc-bbd1-411b153a90f8
+
+            - kind: SendActivity
+              id: sendActivity_513FQO
+              activity: "{Topic.finalHtmlEmail.text}"
 
         - id: conditionItem_M2hZsm
           condition: =Topic.numEmails > 1
@@ -253,7 +274,5 @@ beginDialog:
         - kind: EndDialog
           id: C8eiud
 
-inputType: {}
-outputType: {}
 inputType: {}
 outputType: {}
