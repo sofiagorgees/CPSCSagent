@@ -103,6 +103,25 @@ beginDialog:
         binding:
           value: Topic.value
 
+    - kind: InvokeAIBuilderModelAction
+      id: invokeAIBuilderModelAction_haMaJP
+      input:
+        binding:
+          emailTable: =JSON(Topic.value)
+
+      output:
+        binding:
+          predictionOutput: Topic.foundEmailSummary
+
+      aIModelId: a49adc21-1a43-4810-8c32-82c4b262ff24
+
+    - kind: SendActivity
+      id: sendActivity_JyooY1
+      activity: |-
+        Emails Found:
+
+        {Topic.foundEmailSummary.text}
+
     - kind: SetVariable
       id: setVariable_tBZMpP
       variable: Topic.numEmails
@@ -143,104 +162,19 @@ beginDialog:
                 - id: conditionItem_HLEmoK
                   condition: =Topic.emailReplyChoice = 'cr689_customerCareAssistant.topic.findemailasktoreply.main.question_Gw4i3M'.yes
                   actions:
-                    - kind: SetVariable
-                      id: setVariable_7I2IHV
-                      variable: Topic.emailFound
-                      value: =First(Topic.value).body
+                    - kind: BeginDialog
+                      id: DgeATu
+                      input:
+                        binding:
+                          emailFound: =First(Topic.value).body
+                          messageID: =First(Topic.value).id
+                          toEmails: =First(Topic.value).from
 
-                    - kind: SendActivity
-                      id: sendActivity_zvIYO3
-                      activity: "{Topic.emailFound}"
+                      dialog: cr689_customerCareAssistant.topic.replyemail
 
               elseActions:
                 - kind: EndDialog
                   id: aCyRam
-
-            - kind: InvokeAIBuilderModelAction
-              id: invokeAIBuilderModelAction_XZ31ea
-              input:
-                binding:
-                  inputEmail: =Topic.emailFound
-
-              output:
-                binding:
-                  predictionOutput: Topic.outputRecord
-
-              aIModelId: 3f453886-7077-4bd3-8dc7-ca002a9a965a
-
-            - kind: SetVariable
-              id: setVariable_XZpXob
-              variable: Topic.outputMessageText
-              value: =Topic.outputRecord.text
-
-            - kind: SendActivity
-              id: sendActivity_EjVolY
-              activity: "{Topic.outputMessageText}"
-
-            - kind: AdaptiveCardPrompt
-              id: bc0U6l
-              card: |-
-                {
-                  "type": "AdaptiveCard",
-                  "$schema": "https://adaptivecards.io/schemas/adaptive-card.json",
-                  "version": "1.5",
-                  "body": [
-                    {
-                      "type": "TextBlock",
-                      "text": "Reply Email",
-                      "wrap": true,
-                      "spacing": "None",
-                      "size": "Medium"
-                    },
-                    {
-                      "type": "Input.Text",
-                      "label": "Subject",
-                      "placeholder": "enter a subject",
-                      "id": "subjectText"
-                    },
-                    {
-                      "type": "Input.Text",
-                      "label": "Body:",
-                      "value": "Dear Person,\nblah blah blah.\nThanks",
-                      "isMultiline": true,
-                      "id": "bodyText"
-                    }
-                  ],
-                  "actions": [
-                    {
-                      "type": "Action.Submit",
-                      "title": "Send Email",
-                      "id": "submitButton"
-                    }
-                  ]
-                }
-              output:
-                binding:
-                  actionSubmitId: Topic.actionSubmitId
-                  bodyText: Topic.bodyText
-                  subjectText: Topic.subjectText
-
-              outputType:
-                properties:
-                  actionSubmitId: String
-                  bodyText: String
-                  subjectText: String
-
-            - kind: InvokeAIBuilderModelAction
-              id: invokeAIBuilderModelAction_1juBiJ
-              input:
-                binding:
-                  Markdown_20Text: =Topic.bodyText
-
-              output:
-                binding:
-                  predictionOutput: Topic.finalHtmlEmail
-
-              aIModelId: e35b32a0-9364-45bc-bbd1-411b153a90f8
-
-            - kind: SendActivity
-              id: sendActivity_513FQO
-              activity: "{Topic.finalHtmlEmail.text}"
 
         - id: conditionItem_M2hZsm
           condition: =Topic.numEmails > 1
@@ -261,10 +195,66 @@ beginDialog:
               conditions:
                 - id: conditionItem_Mkc424
                   condition: =Topic.emailReply = true
+                  actions:
+                    - kind: Question
+                      id: question_iG6sKN
+                      interruptionPolicy:
+                        allowInterruption: true
+
+                      variable: init:Topic.emailChoice
+                      prompt: Which email would you like to reply to? Enter a number
+                      entity: NumberPrebuiltEntity
+
+                    - kind: ConditionGroup
+                      id: conditionGroup_YfPfpB
+                      conditions:
+                        - id: conditionItem_jMPS5O
+                          condition: =Topic.emailChoice > Topic.numEmails
+                          actions:
+                            - kind: SendActivity
+                              id: sendActivity_kdmQcc
+                              activity: That was not a valid choice.
+
+                            - kind: GotoAction
+                              id: 2SU6Yi
+                              actionId: question_iG6sKN
+
+                        - id: conditionItem_GoeHQQ
+                          condition: =Topic.emailChoice <= Topic.numEmails && Topic.emailChoice > 0
+                          actions:
+                            - kind: SendActivity
+                              id: sendActivity_7tBoPl
+                              activity: |-
+                                you want to respond to this email
+
+                                From:{Index(Topic.value, Topic.emailChoice).from}
+
+                                Subject: {Index(Topic.value, Topic.emailChoice).subject}
+
+                                Body:
+                                 {Index(Topic.value, Topic.emailChoice).body}
+
+                      elseActions:
+                        - kind: SendActivity
+                          id: sendActivity_eLnOlo
+                          activity: Ending reply request
+
+                        - kind: EndDialog
+                          id: gwgkZS
 
               elseActions:
                 - kind: EndDialog
                   id: HUPl8B
+
+            - kind: BeginDialog
+              id: yTBaab
+              input:
+                binding:
+                  emailFound: =Index(Topic.value, Topic.emailChoice).body
+                  messageID: =Index(Topic.value, Topic.emailChoice).id
+                  toEmails: =Index(Topic.value, Topic.emailChoice).from
+
+              dialog: cr689_customerCareAssistant.topic.replyemail
 
       elseActions:
         - kind: SendActivity
