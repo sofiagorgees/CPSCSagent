@@ -105,6 +105,7 @@ beginDialog:
 
     - kind: InvokeAIBuilderModelAction
       id: invokeAIBuilderModelAction_haMaJP
+      displayName: Prompt - email review
       input:
         binding:
           emailTable: =JSON(Topic.value)
@@ -144,10 +145,6 @@ beginDialog:
 
         {Topic.foundEmailSummary.text}
 
-    - kind: SendActivity
-      id: sendActivity_kTATLL
-      activity: "{Topic.numEmails}"
-
     - kind: ConditionGroup
       id: conditionGroup_DN4rmF
       conditions:
@@ -156,6 +153,7 @@ beginDialog:
           actions:
             - kind: Question
               id: question_Gw4i3M
+              displayName: Question - reply
               interruptionPolicy:
                 allowInterruption: true
 
@@ -198,6 +196,7 @@ beginDialog:
           actions:
             - kind: Question
               id: question_UVmwwj
+              displayName: Question - reply
               interruptionPolicy:
                 allowInterruption: true
 
@@ -215,6 +214,7 @@ beginDialog:
                   actions:
                     - kind: Question
                       id: question_iG6sKN
+                      displayName: Question - emailChoice
                       interruptionPolicy:
                         allowInterruption: true
 
