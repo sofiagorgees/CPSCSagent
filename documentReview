@@ -11,6 +11,7 @@ beginDialog:
   actions:
     - kind: Question
       id: question_Ck5EnZ
+      displayName: Get file from user
       interruptionPolicy:
         allowInterruption: true
 
@@ -23,6 +24,7 @@ beginDialog:
 
     - kind: SetVariable
       id: setVariable_q3ozCj
+      displayName: Check for PDF
       variable: Topic.pdfCheck
       value: |-
         =EndsWith(
@@ -32,6 +34,7 @@ beginDialog:
 
     - kind: SetVariable
       id: setVariable_XpDspK
+      displayName: Check for one file
       variable: Topic.qtyCheck
       value: =CountRows(System.Activity.Attachments)=1
 
@@ -53,90 +56,23 @@ beginDialog:
               activity: only upload a single PDF
 
       elseActions:
-        - kind: SetVariable
-          id: bGKAnR
-          variable: Topic.searchPhrase
-          value: "Search for:"
-
         - kind: Question
           id: question_WI40VX
+          displayName: Search query
           interruptionPolicy:
             allowInterruption: true
 
           variable: init:Topic.searchChoice
-          prompt: What would you like to search for from the file
-          entity:
-            kind: EmbeddedEntity
-            definition:
-              kind: ClosedListEntity
-              items:
-                - id: Compliance Details
-                  displayName: Compliance Details
-
-                - id: Fine codes
-                  displayName: Fine codes
-
-                - id: General Summary
-                  displayName: General Summary
-
-                - id: Other
-                  displayName: Other
-
-            displayName: EmbeddedEntity-i40emb
-
-        - kind: ConditionGroup
-          id: conditionGroup_A49mkX
-          conditions:
-            - id: conditionItem_2TTtpz
-              condition: =Topic.searchChoice = 'cr689_customerCareAssistant.topic.filereview2.0.main.question_WI40VX'.'Fine codes'
-              actions:
-                - kind: SetVariable
-                  id: setVariable_tq8vdE
-                  variable: Topic.searchPhrase
-                  value: fine codes
-
-            - id: conditionItem_PkCO6v
-              condition: =Topic.searchChoice = 'cr689_customerCareAssistant.topic.filereview2.0.main.question_WI40VX'.'General Summary'
-              actions:
-                - kind: SetVariable
-                  id: setVariable_P3L7it
-                  variable: Topic.searchPhrase
-                  value: general summary
-
-            - id: conditionItem_UcUFEX
-              condition: =Topic.searchChoice = 'cr689_customerCareAssistant.topic.filereview2.0.main.question_WI40VX'.'Compliance Details'
-              actions:
-                - kind: SetVariable
-                  id: setVariable_aON1Rz
-                  variable: Topic.searchPhrase
-                  value: compliance details
-
-            - id: conditionItem_txkb8t
-              condition: =Topic.searchChoice = 'cr689_customerCareAssistant.topic.filereview2.0.main.question_WI40VX'.Other
-              actions:
-                - kind: Question
-                  id: b4BZvE
-                  interruptionPolicy:
-                    allowInterruption: true
-
-                  alwaysPrompt: true
-                  variable: Topic.searchPhrase
-                  prompt: What would you like to search the document for? (Phrases, keywords, topics, etc.)
-                  entity:
-                    kind: StringPrebuiltEntity
-                    sensitivityLevel: None
-
-          elseActions:
-            - kind: BeginDialog
-              id: Z5rdRl
-              dialog: cr689_customerCareAssistant.topic.Search
+          prompt: What would you like to search for from the file. (General summary, compliance details, fine codes, etc.)
+          entity: StringPrebuiltEntity
 
         - kind: InvokeAIBuilderModelAction
           id: invokeAIBuilderModelAction_hcPV5W
+          displayName: Prompt - read file
           input:
             binding:
               Document_20input: =Topic.fileUpload
-              phrase_20to_20search_20for: =Topic.searchPhrase
+              phrase_20to_20search_20for: =Topic.searchChoice
 
           output:
             binding:
@@ -146,6 +82,7 @@ beginDialog:
 
         - kind: SendActivity
           id: sendActivity_sJKjtz
+          displayName: Message - from prompt
           activity: "{Topic.promptOutput.text}"
 
         - kind: Question
